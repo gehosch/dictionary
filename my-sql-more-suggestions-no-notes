@@ -1,0 +1,67 @@
+import mysql.connector
+from difflib import get_close_matches
+
+con = mysql.connector.connect(
+user = "ardit700_student",
+password = "ardit700_student",
+host = "108.167.140.122",
+database = "ardit700_pm1database"
+)
+
+cursor = con.cursor()
+user_input = input("Enter word: ")
+case_input = user_input.lower()
+
+query1 = cursor.execute("SELECT * FROM Dictionary WHERE Expression = '%s' " % case_input)
+results = cursor.fetchall()
+
+query2 = cursor.execute("SELECT Expression FROM Dictionary")
+keys = [b[0] for b in cursor.fetchall()]
+
+if results:
+    for result in results:
+        print(result[1])
+
+elif len(get_close_matches(case_input, keys)) > 0:
+    yn = input("Did you mean %s instead? Enter Y if yes or N if no: " % get_close_matches(case_input, keys)[0])
+    if yn == "Y":
+        query3 = cursor.execute("SELECT * FROM Dictionary WHERE Expression = '%s' " % get_close_matches(case_input, keys)[0])
+        close_results = cursor.fetchall()
+        for close_result in close_results:
+            print(close_result[1])
+
+    elif yn == "N":
+        query3 = cursor.execute("SELECT * FROM Dictionary WHERE Expression = '%s' " % get_close_matches(case_input, keys)[0])
+        first_results = cursor.fetchall()     
+
+        query3 = cursor.execute("SELECT * FROM Dictionary WHERE Expression = '%s' " % get_close_matches(case_input, keys)[1])
+        second_results = cursor.fetchall()
+
+        query3 = cursor.execute("SELECT * FROM Dictionary WHERE Expression = '%s' " % get_close_matches(case_input, keys)[2])
+        third_results = cursor.fetchall()
+
+        if second_results == first_results and third_results == first_results:
+            print("No close match found, please try again.")
+
+        elif second_results == first_results:
+            yn2 = input("Did you mean %s instead? Enter Y if yes or N if no: " % get_close_matches(case_input, keys)[2])
+            if yn2 == "Y":
+                for close_result in third_results:
+                    print(close_result[1])
+
+            if yn == "N":
+                print("Word does not exist, please try again.")
+        else:    
+
+            yn2 = input("Did you mean %s instead? Enter Y if yes or N if no: " % get_close_matches(case_input, keys)[1])
+            if yn2 == "Y":
+                for close_result in second_results:
+                    print(close_result[1])
+
+            if yn == "N":
+                print("Word does not exist, please try again.")
+    else:
+        print("We didn't understand your entry.")
+
+else:
+    print("Word does not exist. Please try again.")
